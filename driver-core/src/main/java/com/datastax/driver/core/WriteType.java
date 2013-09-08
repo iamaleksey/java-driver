@@ -33,7 +33,8 @@ public enum WriteType
     /** A counter write (that can be for one or multiple partition key). Such write should not be replayed to avoid overcount. */
     COUNTER,
     /** The initial write to the distributed batch log that Cassandra performs internally before a BATCH write. */
-    BATCH_LOG;
+    BATCH_LOG,
+    CAS;
 
     static WriteType from(org.apache.cassandra.db.WriteType writeType) {
         switch (writeType) {
@@ -42,6 +43,7 @@ public enum WriteType
             case UNLOGGED_BATCH: return UNLOGGED_BATCH;
             case COUNTER: return COUNTER;
             case BATCH_LOG: return BATCH_LOG;
+            case CAS: return CAS;
         }
         throw new AssertionError();
     }
@@ -53,6 +55,7 @@ public enum WriteType
             case UNLOGGED_BATCH: return org.apache.cassandra.db.WriteType.UNLOGGED_BATCH;
             case COUNTER: return org.apache.cassandra.db.WriteType.COUNTER;
             case BATCH_LOG: return org.apache.cassandra.db.WriteType.BATCH_LOG;
+            case CAS: return org.apache.cassandra.db.WriteType.CAS;
         }
         throw new AssertionError();
     }
