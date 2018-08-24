@@ -70,6 +70,7 @@ public abstract class Statement {
     private volatile ByteBuffer pagingState;
     protected volatile Boolean idempotent;
     private volatile Map<String, ByteBuffer> outgoingPayload;
+    private volatile int nowInSeconds = Integer.MIN_VALUE;
 
     // We don't want to expose the constructor, because the code relies on this being only sub-classed by RegularStatement, BoundStatement and BatchStatement
     Statement() {
@@ -323,6 +324,17 @@ public abstract class Statement {
      */
     public long getDefaultTimestamp() {
         return defaultTimestamp;
+    }
+
+    public Statement setNowInSeconds(int nowInSeconds)
+    {
+        this.nowInSeconds = nowInSeconds;
+        return this;
+    }
+
+    public int getNowInSeconds()
+    {
+        return nowInSeconds;
     }
 
     /**

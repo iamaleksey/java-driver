@@ -519,6 +519,8 @@ class SessionManager extends AbstractSession {
                 defaultTimestamp = cluster.getConfiguration().getPolicies().getTimestampGenerator().next();
         }
 
+        int nowInSeconds = statement.getNowInSeconds();
+
         int fetchSize = statement.getFetchSize();
         ByteBuffer usedPagingState = pagingState;
 
@@ -570,7 +572,7 @@ class SessionManager extends AbstractSession {
             String qString = rs.getQueryString(codecRegistry);
 
             Requests.QueryProtocolOptions options = new Requests.QueryProtocolOptions(Message.Request.Type.QUERY, consistency, positionalValues, namedValues,
-                    false, fetchSize, usedPagingState, serialConsistency, defaultTimestamp);
+                    false, fetchSize, usedPagingState, serialConsistency, defaultTimestamp, nowInSeconds);
             request = new Requests.Query(qString, options, statement.isTracing());
         } else if (statement instanceof BoundStatement) {
             BoundStatement bs = (BoundStatement) statement;
@@ -586,11 +588,12 @@ class SessionManager extends AbstractSession {
             boolean skipMetadata = protocolVersion != ProtocolVersion.V1 && bs.statement.getPreparedId().resultSetMetadata.variables != null;
             Requests.QueryProtocolOptions options = new Requests.QueryProtocolOptions(Message.Request.Type.EXECUTE,
                     consistency, Arrays.asList(bs.wrapper.values), Collections.<String, ByteBuffer>emptyMap(), skipMetadata,
-                    fetchSize, usedPagingState, serialConsistency, defaultTimestamp);
+                    fetchSize, usedPagingState, serialConsistency, defaultTimestamp, nowInSeconds);
             request = new Requests.Execute(
                     bs.statement.getPreparedId().boundValuesMetadata.id,
                     bs.statement.getPreparedId().resultSetMetadata.id,
-                    options, statement.isTracing());
+                    options,
+                    statement.isTracing());
         } else {
             assert statement instanceof BatchStatement : statement;
             assert pagingState == null;
@@ -602,7 +605,7 @@ class SessionManager extends AbstractSession {
             if (protocolVersion.compareTo(ProtocolVersion.V4) < 0)
                 bs.ensureAllSet();
             BatchStatement.IdAndValues idAndVals = bs.getIdAndValues(protocolVersion, codecRegistry);
-            Requests.BatchProtocolOptions options = new Requests.BatchProtocolOptions(consistency, serialConsistency, defaultTimestamp);
+            Requests.BatchProtocolOptions options = new Requests.BatchProtocolOptions(consistency, serialConsistency, defaultTimestamp, nowInSeconds);
             request = new Requests.Batch(bs.batchType, idAndVals.ids, idAndVals.values, options, statement.isTracing());
         }
 
